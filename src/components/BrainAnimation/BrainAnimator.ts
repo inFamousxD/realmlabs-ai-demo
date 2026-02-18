@@ -16,6 +16,7 @@ const TAG_PATH_MAP: Record<string, string[]> = {
 
 function pathIdsForTag(label: string): string[] {
     const key = label.toLowerCase();
+    console.log("key", key);
     return TAG_PATH_MAP[key] ?? TAG_PATH_MAP["default"];
 }
 
@@ -50,7 +51,7 @@ export class BrainAnimator {
                 clone.removeAttribute("id");
                 clone.setAttribute("fill", "none");
                 clone.setAttribute("stroke", tag.color);
-                clone.setAttribute("stroke-width", "2.5");
+                clone.setAttribute("stroke-width", "1");
                 clone.setAttribute("stroke-linecap", "round");
                 clone.style.opacity = "0";
                 clone.style.filter = `drop-shadow(0 0 5px ${tag.glow}) drop-shadow(0 0 14px ${tag.glow}88)`;
