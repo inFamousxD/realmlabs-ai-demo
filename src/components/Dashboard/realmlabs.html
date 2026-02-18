@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RealmLabs</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #0b0d18;
+      font-family: 'Inter', -apple-system, sans-serif;
+      overflow: hidden;
+      height: 100vh;
+    }
+
+    .app {
+      display: flex;
+      height: 100vh;
+    }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: 400px;
+      min-width: 400px;
+      background: #0b0d18;
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid #181b2c;
+      position: relative;
+      z-index: 10;
+    }
+
+    .sidebar-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 15px 18px 13px;
+      border-bottom: 1px solid #181b2c;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .logo-text {
+      color: #fff;
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+
+    .logo-text em {
+      font-weight: 300;
+      font-style: normal;
+    }
+
+    .header-btns {
+      display: flex;
+      gap: 6px;
+    }
+
+    .hbtn {
+      background: #141626;
+      border: 1px solid #20243a;
+      border-radius: 8px;
+      width: 32px;
+      height: 32px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #5a5e7a;
+      transition: color 0.2s, border-color 0.2s;
+    }
+
+    .hbtn:hover {
+      color: #aaa;
+      border-color: #363a58;
+    }
+
+    .model-row {
+      padding: 10px 18px;
+      border-bottom: 1px solid #181b2c;
+    }
+
+    .model-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #141626;
+      border: 1px solid #20243a;
+      border-radius: 20px;
+      padding: 5px 13px;
+      color: #bbb;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .ctrl-row {
+      padding: 8px 18px;
+      border-bottom: 1px solid #181b2c;
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .cpill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: #141626;
+      border: 1px solid #20243a;
+      border-radius: 14px;
+      padding: 4px 10px;
+      color: #777;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .empty-state {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 11px;
+    }
+
+    .empty-ring {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      border: 2px solid #22c55e;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #22c55e;
+      font-size: 24px;
+    }
+
+    .empty-title {
+      color: #dde;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .empty-sub {
+      color: #404460;
+      font-size: 12.5px;
+      text-align: center;
+      line-height: 1.5;
+    }
+
+    .input-area {
+      padding: 12px 16px;
+      border-top: 1px solid #181b2c;
+    }
+
+    .input-box {
+      display: flex;
+      align-items: center;
+      background: #141626;
+      border: 1px solid #20243a;
+      border-radius: 12px;
+      padding: 9px 14px;
+      gap: 10px;
+      transition: border-color 0.2s;
+    }
+
+    .input-box:focus-within {
+      border-color: #22c55e33;
+    }
+
+    .input-box input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: #ccc;
+      font-size: 13.5px;
+      font-family: inherit;
+    }
+
+    .input-box input::placeholder {
+      color: #363852;
+    }
+
+    .send-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #22c55e;
+      padding: 0;
+      display: flex;
+    }
+
+    /* ── Main Viz ── */
+    .main-viz {
+      flex: 1;
+      background: #0c0e1c;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #viz-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    /* Sentence bubble */
+    .sentence-bubble {
+      position: absolute;
+      left: 52%;
+      top: 46%;
+      transform: translate(-40%, -50%);
+      background: rgba(36, 40, 64, 0.92);
+      backdrop-filter: blur(14px);
+      border-radius: 26px;
+      padding: 14px 28px;
+      font-size: 17px;
+      color: #d8d8ee;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      z-index: 20;
+      pointer-events: none;
+      white-space: nowrap;
+      min-height: 50px;
+      display: flex;
+      align-items: center;
+    }
+
+    .cursor-blink {
+      display: inline-block;
+      width: 2px;
+      height: 1.1em;
+      background: #22c55e;
+      margin-left: 3px;
+      vertical-align: middle;
+      animation: cb 0.65s step-end infinite;
+    }
+
+    @keyframes cb {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: 0
+      }
+    }
+
+    /* Tag bubbles */
+    .tag {
+      position: absolute;
+      z-index: 30;
+      border-radius: 20px;
+      padding: 8px 15px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      pointer-events: none;
+      transform: translateX(-50%) translateY(0);
+      opacity: 0;
+      transition: opacity 0.25s ease, transform 0.25s ease;
+    }
+
+    .tag.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(-4px);
+    }
+  </style>
+</head>
+
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    const NUM_LINES = 12;
+    const DOT_ROWS = 9;
+    const GREEN = "#4ade80";
+    const LINE_COL = "#1c2040";
+    const DOT_COL = "#232648";
+    const DOT_GRN = "#22c55e";
+
+    const SEQUENCES = [
+      {
+        text: "Can I carry a gun to my office",
+        tags: [
+          { label: "English", color: "#166534", glow: "#22c55e" },
+          { label: "Violence", color: "#991b1b", glow: "#ef4444" },
+        ],
+      },
+      {
+        text: "Je veux manger un croissant à Paris",
+        tags: [
+          { label: "Spanish", color: "#166534", glow: "#22c55e" },
+          { label: "Food", color: "#166534", glow: "#22c55e" },
+        ],
+      },
+      {
+        text: "Recipe for biscuits",
+        tags: [
+          { label: "English", color: "#166534", glow: "#22c55e" },
+          { label: "Food", color: "#166534", glow: "#22c55e" },
+        ],
+      },
+    ];
+
+    /* ─── Helpers ─────────────────────────────────────────── */
+    const delay = ms => new Promise(r => setTimeout(r, ms));
+    function easeInOut(t) { return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t; }
+    function lerp(a, b, t) { return a + (b - a) * t; }
+    function pickN(arr, n) { return [...arr].sort(() => Math.random() - 0.5).slice(0, n); }
+
+    /* ─── Canvas Renderer ─────────────────────────────────── */
+    class GridRenderer {
+      constructor(canvas) {
+        this.canvas = canvas;
+        this.ctx = canvas.getContext("2d");
+        this.w = 0; this.h = 0;
+        this.movingDots = [];
+        this._dpr = window.devicePixelRatio || 1;
+        this._onResize = () => this._resize();
+        window.addEventListener("resize", this._onResize);
+        this._resize();
+        this._loop();
+      }
+
+      _resize() {
+        const dpr = this._dpr;
+        this.w = this.canvas.offsetWidth;
+        this.h = this.canvas.offsetHeight;
+        this.canvas.width = this.w * dpr;
+        this.canvas.height = this.h * dpr;
+        this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+
+      lineX(i) {
+        const pad = Math.max(60, this.w * 0.05);
+        return pad + i * (this.w - pad * 2) / (NUM_LINES - 1);
+      }
+      dotY(row) {
+        const pad = Math.max(60, this.h * 0.08);
+        return pad + row * (this.h - pad * 2) / (DOT_ROWS - 1);
+      }
+
+      _drawGrid() {
+        const { ctx } = this;
+        // Vertical lines
+        for (let i = 0; i < NUM_LINES; i++) {
+          const x = this.lineX(i);
+          ctx.save();
+          ctx.globalAlpha = 0.75;
+          ctx.strokeStyle = LINE_COL;
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(x, this.dotY(0));
+          ctx.lineTo(x, this.dotY(DOT_ROWS - 1));
+          ctx.stroke();
+          ctx.restore();
+        }
+        // Horizontal connectors
+        ctx.save();
+        ctx.globalAlpha = 0.18;
+        ctx.strokeStyle = LINE_COL;
+        ctx.lineWidth = 0.8;
+        [2, 4, 6].forEach(row => {
+          const y = this.dotY(row);
+          ctx.beginPath();
+          ctx.moveTo(this.lineX(0), y);
+          ctx.lineTo(this.lineX(NUM_LINES - 1), y);
+          ctx.stroke();
+        });
+        ctx.restore();
+        // Dots
+        for (let i = 0; i < NUM_LINES; i++) {
+          for (let j = 0; j < DOT_ROWS; j++) {
+            const isG = (i * 3 + j * 2) % 7 === 0;
+            ctx.save();
+            ctx.globalAlpha = isG ? 0.85 : 0.5;
+            ctx.fillStyle = isG ? DOT_GRN : DOT_COL;
+            ctx.beginPath();
+            ctx.arc(this.lineX(i), this.dotY(j), 3.5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+          }
+        }
+      }
+
+      _drawMovingDots() {
+        const { ctx } = this;
+        this.movingDots.forEach(d => {
+          // glow halo
+          const g = ctx.createRadialGradient(d.x, d.y, 0, d.x, d.y, 14);
+          g.addColorStop(0, "rgba(74,222,128,0.55)");
+          g.addColorStop(1, "rgba(74,222,128,0)");
+          ctx.save();
+          ctx.globalAlpha = 1;
+          ctx.fillStyle = g;
+          ctx.beginPath();
+          ctx.arc(d.x, d.y, 14, 0, Math.PI * 2);
+          ctx.fill();
+          // core
+          ctx.fillStyle = GREEN;
+          ctx.beginPath();
+          ctx.arc(d.x, d.y, 5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        });
+      }
+
+      _draw() {
+        const { ctx, w, h } = this;
+        ctx.clearRect(0, 0, w, h);
+        this._drawGrid();
+        this._drawMovingDots();
+      }
+
+      _loop() {
+        this._rafId = requestAnimationFrame(() => {
+          this._draw();
+          this._loop();
+        });
+      }
+
+      // Returns promise resolving to {x, y, dot} when done
+      animateDot(lineIdx, stopRow, durationMs) {
+        return new Promise(resolve => {
+          const x = this.lineX(lineIdx);
+          const startY = this.dotY(0);
+          const endY = this.dotY(stopRow);
+          const t0 = performance.now();
+          const dot = { x, y: startY };
+          this.movingDots.push(dot);
+          const tick = now => {
+            const p = Math.min((now - t0) / durationMs, 1);
+            dot.y = lerp(startY, endY, easeInOut(p));
+            if (p < 1) requestAnimationFrame(tick);
+            else { dot.y = endY; resolve({ x, y: endY, dot }); }
+          };
+          requestAnimationFrame(tick);
+        });
+      }
+
+      removeDot(dot) { this.movingDots = this.movingDots.filter(d => d !== dot); }
+
+      destroy() {
+        cancelAnimationFrame(this._rafId);
+        window.removeEventListener("resize", this._onResize);
+      }
+    }
+
+    /* ─── React App ───────────────────────────────────────── */
+    function App() {
+      const canvasRef = useRef(null);
+      const rendRef = useRef(null);
+      const loopRef = useRef(false);
+      const [msg, setMsg] = useState("");
+      const [typed, setTyped] = useState("");
+      const [showCur, setShowCur] = useState(false);
+      const [tags, setTags] = useState([]);
+
+      useEffect(() => {
+        const c = canvasRef.current;
+        if (!c) return;
+        const r = new GridRenderer(c);
+        rendRef.current = r;
+        return () => r.destroy();
+      }, []);
+
+      useEffect(() => {
+        if (loopRef.current) return;
+        loopRef.current = true;
+        const go = async () => {
+          await delay(600);
+          let idx = 0;
+          while (true) {
+            const seq = SEQUENCES[idx++ % SEQUENCES.length];
+
+            // Type
+            setTyped(""); setShowCur(true);
+            for (let i = 1; i <= seq.text.length; i++) {
+              setTyped(seq.text.slice(0, i));
+              await delay(40 + Math.random() * 22);
+            }
+            await delay(480);
+            setShowCur(false);
+
+            // Pick 2 random lines + stop rows
+            const rend = rendRef.current;
+            if (!rend) { await delay(2000); continue; }
+
+            const lines = pickN([...Array(NUM_LINES).keys()], 2);
+            const stopRows = [6 + Math.floor(Math.random() * 3), 5 + Math.floor(Math.random() * 3)];
+
+            // Animate dots
+            const results = await Promise.all(
+              lines.map((li, i) => rend.animateDot(li, stopRows[i], 1100))
+            );
+
+            // Show tag bubbles
+            const newTags = results.map(({ x, y }, i) => ({
+              id: Math.random(),
+              label: seq.tags[i]?.label ?? "?",
+              color: seq.tags[i]?.color ?? "#166534",
+              glow: seq.tags[i]?.glow ?? "#22c55e",
+              x, y, show: false,
+            }));
+            setTags(newTags);
+            await delay(30);
+            setTags(t => t.map(tg => ({ ...tg, show: true })));
+            await delay(500);
+
+            // Blink twice
+            for (let b = 0; b < 2; b++) {
+              setTags(t => t.map(tg => ({ ...tg, show: false })));
+              await delay(200);
+              setTags(t => t.map(tg => ({ ...tg, show: true })));
+              await delay(200);
+            }
+
+            await delay(350);
+            results.forEach(r => rend.removeDot(r.dot));
+            setTags([]);
+            setTyped("");
+            await delay(400);
+          }
+        };
+        go();
+      }, []);
+
+      return (
+        <div className="app">
+          {/* Sidebar */}
+          <div className="sidebar">
+            <div className="sidebar-header">
+              <div className="logo">
+                <svg width="26" height="26" viewBox="0 0 28 28" fill="none">
+                  <polygon points="14,2 26,9 26,19 14,26 2,19 2,9"
+                    stroke="#22c55e" strokeWidth="1.8" fill="none" />
+                  <polygon points="14,8 20,12 20,18 14,22 8,18 8,12"
+                    fill="#22c55e" opacity="0.65" />
+                </svg>
+                <span className="logo-text">Realm<em>labs</em></span>
+              </div>
+              <div className="header-btns">
+                <button className="hbtn">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z" />
+                  </svg>
+                </button>
+                <button className="hbtn">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><polyline points="7 10 12 15 17 10" />
+                    <line x1="12" y1="15" x2="12" y2="3" />
+                  </svg>
+                </button>
+                <button className="hbtn">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
+                    <polyline points="16 17 21 12 16 7" />
+                    <line x1="21" y1="12" x2="9" y2="12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div className="model-row">
+              <div className="model-pill">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="3" />
+                  <path d="M12 1v3M12 20v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M1 12h3M20 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12" />
+                </svg>
+                Meta Llama 3.1
+              </div>
+            </div>
+
+            <div className="ctrl-row">
+              {[
+                { icon: "🌡", label: "0" },
+                { icon: "💬", label: "Default" },
+                { icon: "≣", label: "100" },
+                { icon: "👁", label: "Show Special" },
+              ].map((c, i) => (
+                <div key={i} className="cpill">
+                  <span>{c.icon}</span><span>{c.label}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="empty-state">
+              <div className="empty-ring">💬</div>
+              <div className="empty-title">No messages yet</div>
+              <div className="empty-sub">Start a conversation by typing your message below</div>
+            </div>
+
+            <div className="input-area">
+              <div className="input-box">
+                <input
+                  value={msg}
+                  onChange={e => setMsg(e.target.value)}
+                  placeholder="Type your message..."
+                  onKeyDown={e => e.key === "Enter" && setMsg("")}
+                />
+                <button className="send-btn" onClick={() => setMsg("")}>
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#22c55e" strokeWidth="2.2">
+                    <line x1="22" y1="2" x2="11" y2="13" />
+                    <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Main Viz */}
+          <div className="main-viz">
+            <canvas ref={canvasRef} id="viz-canvas" />
+
+            <div className="sentence-bubble">
+              <span>{typed}</span>
+              {showCur && <span className="cursor-blink" />}
+            </div>
+
+            {tags.map((tag, i) => (
+              <div
+                key={tag.id}
+                className={`tag${tag.show ? " show" : ""}`}
+                style={{
+                  left: tag.x,
+                  top: tag.y - 52 - i * 6,
+                  background: tag.color,
+                  boxShadow: `0 4px 18px ${tag.glow}44`,
+                }}
+              >
+                ⟳ {tag.label}
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
+</body>
+
+</html>
