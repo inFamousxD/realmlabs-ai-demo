@@ -1,9 +1,11 @@
 import { animate, svg, stagger } from "animejs";
 import type { JSAnimation } from "animejs";
 
-const ALL_IDS = ["a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p"];
+const ALL_IDS = [
+    "a", "b", "c", "d", "e", "f", "g", "h",
+    "i", "j", "k", "l", "m", "n", "o", "p",
+];
 
-/** Pick `n` random items from an array (Fisher-Yates) */
 function pickRandom<T>(arr: T[], n: number): T[] {
     const copy = [...arr];
     for (let i = copy.length - 1; i > 0; i--) {
@@ -40,6 +42,19 @@ export class BrainAnimator {
         const ids = pickRandom(ALL_IDS, 10);
         const clones: SVGPathElement[] = [];
 
+        // Check if the defs paths sit inside a transformed <g>
+        // and replicate that transform on the overlay group
+        const samplePath = this.svgEl.querySelector<SVGPathElement>(
+            `defs #${ids[0]}`
+        );
+        if (samplePath) {
+            const parentG = samplePath.closest("g[transform]");
+            if (parentG && parentG.closest("defs")) {
+                const t = parentG.getAttribute("transform");
+                if (t) this.overlayGroup.setAttribute("transform", t);
+            }
+        }
+
         for (const id of ids) {
             const src = this.svgEl.querySelector<SVGPathElement>(`defs #${id}`);
             if (!src) continue;
@@ -47,10 +62,10 @@ export class BrainAnimator {
             const clone = src.cloneNode(true) as SVGPathElement;
             clone.removeAttribute("id");
             clone.setAttribute("fill", "none");
-            clone.setAttribute("stroke", "#22c55e");
-            clone.setAttribute("stroke-width", "1.5");
+            clone.setAttribute("stroke", "#10b981");
+            clone.setAttribute("stroke-width", "1.2");
             clone.setAttribute("stroke-linecap", "round");
-            clone.setAttribute("opacity", "0.85");
+            clone.setAttribute("opacity", "0.9");
 
             this.overlayGroup.appendChild(clone);
             clones.push(clone);
@@ -61,26 +76,31 @@ export class BrainAnimator {
         const drawables = clones.flatMap((c) => svg.createDrawable(c));
 
         this.anim = animate(drawables, {
-            draw: ["0 0", "0 .12", ".88 1", "1 1"],
+            draw: ["0 0", "0 .10", ".90 1", "1 1"],
             ease: "linear",
             duration: 1600,
-            delay: stagger(150),
+            delay: stagger(120),
         });
 
-        // After all finish, pick new random set
-        const totalDuration = 1600 + 150 * (drawables.length - 1) + 400;
+        const totalDuration = 1600 + 120 * (drawables.length - 1) + 500;
         this.loopTimer = window.setTimeout(() => this.runCycle(), totalDuration);
     }
 
     private clearCycle(): void {
         if (this.anim) {
-            try { this.anim.revert(); } catch { this.anim.pause(); }
+            try {
+                this.anim.revert();
+            } catch {
+                this.anim.pause();
+            }
             this.anim = null;
         }
         if (this.loopTimer !== null) {
             clearTimeout(this.loopTimer);
             this.loopTimer = null;
         }
+        // Reset overlay transform for next cycle
+        this.overlayGroup.removeAttribute("transform");
         while (this.overlayGroup.firstChild) {
             this.overlayGroup.removeChild(this.overlayGroup.firstChild);
         }
