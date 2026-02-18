@@ -1,150 +1,98 @@
-import { createTimeline, animate, Timeline } from "animejs";
+import { animate, svg, stagger } from "animejs";
+import type { JSAnimation } from "animejs";
 
-export interface AnimTag {
-    label: string;
-    color: string;
-    glow: string;
-}
+const ALL_IDS = ["a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p"];
 
-const TAG_PATH_MAP: Record<string, string[]> = {
-    violence: ["a", "b", "h", "i", "j", "p"],
-    english:  ["e", "f", "m", "n"],
-    french:   ["e", "f", "m", "n"],
-    food:     ["c", "d", "k", "l"],
-    default:  ["g", "o"],
-};
-
-function pathIdsForTag(label: string): string[] {
-    const key = label.toLowerCase();
-    console.log("key", key);
-    return TAG_PATH_MAP[key] ?? TAG_PATH_MAP["default"];
+/** Pick `n` random items from an array (Fisher-Yates) */
+function pickRandom<T>(arr: T[], n: number): T[] {
+    const copy = [...arr];
+    for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+    }
+    return copy.slice(0, n);
 }
 
 export class BrainAnimator {
-    private svg: SVGSVGElement;
+    private svgEl: SVGSVGElement;
     private overlayGroup: SVGGElement;
-    private activeTimeline: Timeline | null = null;
-    private idleAnims: ReturnType<typeof animate>[] = [];
+    private anim: JSAnimation | null = null;
+    private loopTimer: number | null = null;
+    private destroyed = false;
 
-    constructor(svg: SVGSVGElement) {
-        this.svg = svg;
+    constructor(svgEl: SVGSVGElement) {
+        this.svgEl = svgEl;
 
         const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
-        g.setAttribute("class", "brain-anim-overlay");
-        svg.appendChild(g);
+        g.setAttribute("class", "brain-electricity");
+        svgEl.appendChild(g);
         this.overlayGroup = g;
     }
 
-    animateTags(tags: AnimTag[]) {
-        this.stopIdle();
-        this.clearOverlay();
-
-        type TraceEntry = { el: SVGPathElement; len: number; tagIdx: number; pathIdx: number };
-        const traces: TraceEntry[] = [];
-
-        tags.forEach((tag, tagIdx) => {
-            pathIdsForTag(tag.label).forEach((id, pathIdx) => {
-                const defPath = this.svg.querySelector<SVGPathElement>(`defs #${id}`);
-                if (!defPath) return;
-
-                const clone = defPath.cloneNode(true) as SVGPathElement;
-                clone.removeAttribute("id");
-                clone.setAttribute("fill", "none");
-                clone.setAttribute("stroke", tag.color);
-                clone.setAttribute("stroke-width", "1");
-                clone.setAttribute("stroke-linecap", "round");
-                clone.style.opacity = "0";
-                clone.style.filter = `drop-shadow(0 0 5px ${tag.glow}) drop-shadow(0 0 14px ${tag.glow}88)`;
-
-                this.overlayGroup.appendChild(clone);
-
-                const len = clone.getTotalLength?.() ?? 200;
-                clone.setAttribute("stroke-dasharray", `${len}`);
-                clone.setAttribute("stroke-dashoffset", `${len}`);
-
-                traces.push({ el: clone, len, tagIdx, pathIdx });
-            });
-        });
-
-        if (!traces.length) return;
-
-        const tl = createTimeline();
-        this.activeTimeline = tl;
-
-        traces.forEach(({ el, len, tagIdx, pathIdx }) => {
-            const stagger = tagIdx * 150 + pathIdx * 70;
-
-            tl
-                .add(el, {
-                    opacity: [0, 1],
-                    duration: 80,
-                    delay: stagger,
-                    ease: "out",
-                }, "<<")
-                .add(el, {
-                    strokeDashoffset: [len, 0],
-                    duration: 900,
-                    ease: "inOutQuart",
-                }, "<<")
-                .add(el, {
-                    opacity: [1, 0],
-                    duration: 400,
-                    ease: "out",
-                }, `<<+=900`);
-        });
+    start(): void {
+        this.runCycle();
     }
 
-    startIdle() {
-        this.stopIdle();
-        this.clearOverlay();
+    private runCycle(): void {
+        if (this.destroyed) return;
+        this.clearCycle();
 
-        const ids = ["g", "o", "c", "k"];
+        const ids = pickRandom(ALL_IDS, 10);
+        const clones: SVGPathElement[] = [];
 
-        ids.forEach((id, i) => {
-            const defPath = this.svg.querySelector<SVGPathElement>(`defs #${id}`);
-            if (!defPath) return;
+        for (const id of ids) {
+            const src = this.svgEl.querySelector<SVGPathElement>(`defs #${id}`);
+            if (!src) continue;
 
-            const clone = defPath.cloneNode(true) as SVGPathElement;
+            const clone = src.cloneNode(true) as SVGPathElement;
             clone.removeAttribute("id");
             clone.setAttribute("fill", "none");
-            clone.setAttribute("stroke", "#4a4e7a");
-            clone.setAttribute("stroke-width", "1");
+            clone.setAttribute("stroke", "#22c55e");
+            clone.setAttribute("stroke-width", "1.5");
             clone.setAttribute("stroke-linecap", "round");
-            clone.setAttribute("stroke-dasharray", "6 20");
-            clone.style.opacity = "0.05";
+            clone.setAttribute("opacity", "0.85");
+
             this.overlayGroup.appendChild(clone);
+            clones.push(clone);
+        }
 
-            const anim = animate(clone, {
-                opacity: [0.05, 0.2, 0.05],
-                duration: 2800 + i * 400,
-                delay: i * 350,
-                ease: "inOutSine",
-                loop: true,
-                alternate: true,
-            });
+        if (!clones.length) return;
 
-            this.idleAnims.push(anim);
+        const drawables = clones.flatMap((c) => svg.createDrawable(c));
+
+        this.anim = animate(drawables, {
+            draw: ["0 0", "0 .12", ".88 1", "1 1"],
+            ease: "linear",
+            duration: 1600,
+            delay: stagger(150),
         });
+
+        // After all finish, pick new random set
+        const totalDuration = 1600 + 150 * (drawables.length - 1) + 400;
+        this.loopTimer = window.setTimeout(() => this.runCycle(), totalDuration);
     }
 
-    stopIdle() {
-        this.idleAnims.forEach((a) => a.pause());
-        this.idleAnims = [];
-    }
-
-    clearOverlay() {
-        if (this.activeTimeline) {
-            this.activeTimeline.pause();
-            this.activeTimeline = null;
+    private clearCycle(): void {
+        if (this.anim) {
+            try { this.anim.revert(); } catch { this.anim.pause(); }
+            this.anim = null;
+        }
+        if (this.loopTimer !== null) {
+            clearTimeout(this.loopTimer);
+            this.loopTimer = null;
         }
         while (this.overlayGroup.firstChild) {
             this.overlayGroup.removeChild(this.overlayGroup.firstChild);
         }
     }
 
-    destroy() {
-        this.clearOverlay();
-        this.stopIdle();
+    stop(): void {
+        this.clearCycle();
+    }
+
+    destroy(): void {
+        this.destroyed = true;
+        this.clearCycle();
         this.overlayGroup.remove();
     }
 }
