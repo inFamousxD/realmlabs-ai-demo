@@ -1,5 +1,12 @@
-const Brain = (props: any) => (
+import React from "react";
+
+interface BrainProps {
+    svgRef?: React.RefObject<SVGSVGElement | null>;
+}
+
+const Brain: React.FC<BrainProps> = ({ svgRef, ...props }) => (
     <svg
+        ref={svgRef}
         xmlns="http://www.w3.org/2000/svg"
         width={559}
         height={581}
