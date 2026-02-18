@@ -25,6 +25,7 @@ import {
     CursorBlink,
     Tag,
 } from "./Dashboard.styles";
+import Brain from "./Brain";
 
 // ── Constants ──────────────────────────────────────────────
 
@@ -452,7 +453,7 @@ const Dashboard: React.FC = () => {
                 </Sidebar>
 
                 {/* ── Main Viz ── */}
-                <MainViz>
+                {/* <MainViz>
                     <VizCanvas ref={canvasRef} />
 
                     <SentenceBubble>
@@ -473,7 +474,8 @@ const Dashboard: React.FC = () => {
                             ⟳ {tag.label}
                         </Tag>
                     ))}
-                </MainViz>
+                </MainViz> */}
+                <Brain />
             </App>
         </>
     );
