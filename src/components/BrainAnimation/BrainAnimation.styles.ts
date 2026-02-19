@@ -9,40 +9,47 @@ const cursorBlink = keyframes`
 
 // ── Main Viz ───────────────────────────────────────────────
 export const MainViz = styled.main`
-  flex: 1;
-  background: #080a14;
-  position: relative;
-  overflow: hidden;
-  font-family: "DM Sans", -apple-system, BlinkMacSystemFont, sans-serif;
-
-  &::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  > * {
+    flex: 1;
+    background: #080a14;
     position: relative;
-    z-index: 1;
-  }
+    overflow: hidden;
+    font-family: "DM Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+    
+    &::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+        pointer-events: none;
+        z-index: 0;
+    }
+
+    > * {
+        position: relative;
+        z-index: 1;
+    }
+
     display: flex;
     vertical-align: center;
-    
-    
+
     .brain-animation {
         border: 1px dashed rgba(255, 255, 255, 0.1);
         border-radius: 50%;
-        
+
         padding: 50px;
-        
-        width: 90vh;
-        height: 90vh;
-        
+
+        width: 75vh;
+        height: 75vh;
+
         margin: auto;
         vertical-align: center;
+
+        backdrop-filter: blur(2px);
+        -webkit-backdrop-filter: blur(2px);
+    }
+    
+    .tsparticles {
+        opacity: .5;
     }
 `;
 
