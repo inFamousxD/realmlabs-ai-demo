@@ -32,6 +32,33 @@ const typing = keyframes`
     }
 `;
 
+const blink = keyframes`
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+`;
+
+const slideDown = keyframes`
+    from {
+        opacity: 0;
+        transform: translateY(-8px) scale(0.96);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+`;
+
+const slideUp = keyframes`
+    from {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(-8px) scale(0.96);
+    }
+`;
+
 // ── Sidebar ────────────────────────────────────────────────
 export const Sidebar = styled.aside`
     width: 500px;
@@ -137,6 +164,7 @@ export const ModelRow = styled.div`
     padding: 12px 20px;
     display: flex;
     justify-content: center;
+    position: relative;
 `;
 
 export const ModelPill = styled.div`
@@ -165,11 +193,83 @@ export const ModelPill = styled.div`
     }
 `;
 
-export const ModelChevron = styled.span`
+export const ModelChevron = styled.span<{ $open?: boolean }>`
     .material-symbols-rounded {
         font-size: 16px;
         color: rgba(255, 255, 255, 0.2);
+        transition: transform 0.2s ease;
+        display: block;
+        ${({ $open }) => $open && css`transform: rotate(180deg);`}
     }
+`;
+
+// ── Dropdown ───────────────────────────────────────────────
+export const DropdownOverlay = styled.div`
+    position: fixed;
+    inset: 0;
+    z-index: 99;
+`;
+
+export const DropdownMenu = styled.div<{ $closing?: boolean }>`
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    min-width: 240px;
+    background: rgba(15, 17, 32, 0.82);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    padding: 6px;
+    z-index: 100;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    animation: ${({ $closing }) => $closing ? slideUp : slideDown} 0.18s ease forwards;
+`;
+
+export const DropdownItem = styled.button<{ $selected?: boolean }>`
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    background: ${({ $selected }) => $selected ? "rgba(16, 185, 129, 0.08)" : "transparent"};
+    border: none;
+    border-radius: 10px;
+    color: ${({ $selected }) => $selected ? "#10b981" : "rgba(255, 255, 255, 0.55)"};
+    font-size: 13px;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    text-align: left;
+
+    .material-symbols-rounded {
+        font-size: 16px;
+        color: ${({ $selected }) => $selected ? "#10b981" : "rgba(255, 255, 255, 0.2)"};
+    }
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.05);
+        color: rgba(255, 255, 255, 0.85);
+
+        .material-symbols-rounded {
+            color: rgba(255, 255, 255, 0.5);
+        }
+    }
+`;
+
+export const DropdownItemMeta = styled.span`
+    margin-left: auto;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.15);
+    font-weight: 400;
+`;
+
+export const DropdownDivider = styled.div`
+    height: 1px;
+    background: rgba(255, 255, 255, 0.05);
+    margin: 4px 8px;
 `;
 
 export const CtrlRow = styled.div`
@@ -261,6 +361,16 @@ export const MessageBubble = styled.div<{ $isUser?: boolean }>`
                     `}
 `;
 
+export const StreamingCursor = styled.span`
+    display: inline-block;
+    width: 2px;
+    height: 14px;
+    background: #10b981;
+    margin-left: 2px;
+    vertical-align: text-bottom;
+    animation: ${blink} 0.8s step-end infinite;
+`;
+
 export const TypingIndicator = styled.div`
     display: flex;
     gap: 4px;
@@ -286,6 +396,49 @@ export const TypingIndicator = styled.div`
         &:nth-child(3) {
             animation-delay: 0.4s;
         }
+    }
+`;
+
+// ── Message Actions (on hover) ─────────────────────────────
+export const MessageRow = styled.div<{ $isUser?: boolean }>`
+    display: flex;
+    flex-direction: column;
+    align-items: ${({ $isUser }) => $isUser ? "flex-end" : "flex-start"};
+    gap: 4px;
+
+    &:hover > div:last-child {
+        opacity: 1;
+    }
+`;
+
+export const MessageActions = styled.div<{ $isUser?: boolean }>`
+    display: flex;
+    gap: 2px;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+    padding: 0 4px;
+`;
+
+export const MsgActionBtn = styled.button`
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    width: 26px;
+    height: 26px;
+    border-radius: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.15);
+    transition: all 0.15s ease;
+
+    .material-symbols-rounded {
+        font-size: 15px;
+    }
+
+    &:hover {
+        color: rgba(255, 255, 255, 0.5);
+        background: rgba(255, 255, 255, 0.04);
     }
 `;
 
@@ -484,5 +637,71 @@ export const InputHint = styled.div`
         border-radius: 4px;
         font-family: inherit;
         font-size: 10px;
+    }
+`;
+
+// ── Settings Dropdown ──────────────────────────────────────
+export const SettingsDropdown = styled.div<{ $closing?: boolean }>`
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+    min-width: 250px;
+    background: rgba(15, 17, 32, 0.82);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    padding: 6px;
+    z-index: 100;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    animation: ${({ $closing }) => $closing ? slideUp : slideDown} 0.18s ease forwards;
+`;
+
+export const SettingsToggleRow = styled.div`
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.04);
+    }
+`;
+
+export const SettingsLabel = styled.span`
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: rgba(255, 255, 255, 0.55);
+    font-size: 13px;
+    font-weight: 500;
+
+    .material-symbols-rounded {
+        font-size: 16px;
+        color: rgba(255, 255, 255, 0.2);
+    }
+`;
+
+export const Toggle = styled.div<{ $on?: boolean }>`
+    width: 34px;
+    height: 20px;
+    border-radius: 10px;
+    background: ${({ $on }) => $on ? "rgba(16, 185, 129, 0.5)" : "rgba(255, 255, 255, 0.08)"};
+    position: relative;
+    transition: background 0.2s ease;
+
+    &::after {
+        content: "";
+        position: absolute;
+        top: 3px;
+        left: ${({ $on }) => $on ? "17px" : "3px"};
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: ${({ $on }) => $on ? "#10b981" : "rgba(255, 255, 255, 0.25)"};
+        transition: all 0.2s ease;
     }
 `;
