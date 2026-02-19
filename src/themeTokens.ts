@@ -65,10 +65,10 @@ export const darkTokens: ThemeTokens = {
     inputBorderFocus: "rgba(16,185,129,0.3)",
 
     // Bumped up from original for better legibility
-    textPrimary: "rgba(255,255,255,0.94)",
-    textSecondary: "rgba(255,255,255,0.76)",
-    textMuted: "rgba(255,255,255,0.46)",
-    textFaint: "rgba(255,255,255,0.22)",
+    textPrimary: "rgba(255,255,255,0.95)",
+    textSecondary: "rgba(255,255,255,0.85)",
+    textMuted: "rgba(255,255,255,0.70)",
+    textFaint: "rgba(255,255,255,0.40)",
     textPlaceholder: "rgba(255,255,255,0.20)",
 
     accent: "#10b981",
@@ -78,7 +78,7 @@ export const darkTokens: ThemeTokens = {
     accentFocus: "rgba(16,185,129,0.3)",
     accentGlow: "rgba(16,185,129,0.25)",
 
-    noiseOp: "0.032",
+    noiseOp: "0.050",
 
     brainStroke: "#b1b3f4",
 

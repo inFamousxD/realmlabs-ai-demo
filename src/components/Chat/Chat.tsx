@@ -223,7 +223,7 @@ const Chat: React.FC = () => {
                     style={{
                         position: "fixed",
                         top: modelDropdownPos.top,
-                        left: modelDropdownPos.left + modelDropdownPos.width / 2,
+                        left: modelDropdownPos.left,
                         transform: "translateX(-50%)",
                         minWidth: 240,
                     }}
@@ -410,7 +410,7 @@ const Chat: React.FC = () => {
                     </EmptyRing>
                     <EmptyTitle $t={t}>Start a conversation</EmptyTitle>
                     <EmptySub $t={t}>
-                        Ask anything — code, creative writing, analysis, or just chat.
+                        Ask anything - code, creative writing, analysis, or just chat.
                     </EmptySub>
                     <QuickActions>
                         {QUICK_PROMPTS.map((q, i) => (
