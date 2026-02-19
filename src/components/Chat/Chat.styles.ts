@@ -194,8 +194,8 @@ export const DropdownMenu = styled.div<{ $closing?: boolean; $t: ThemeTokens }>`
     padding: 6px;
     z-index: 100;
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
-    backdrop-filter: blur(2px);
-    -webkit-backdrop-filter: blur(2px);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
     animation: ${({ $closing }) => ($closing ? slideUp : slideDown)} 0.18s ease forwards;
 
     &::before {
@@ -595,8 +595,8 @@ export const SettingsDropdown = styled.div<{ $closing?: boolean; $t: ThemeTokens
     padding: 6px;
     z-index: 100;
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
-    backdrop-filter: blur(2px);
-    -webkit-backdrop-filter: blur(2px);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
     animation: ${({ $closing }) => ($closing ? slideUp : slideDown)} 0.18s ease forwards;
 
     &::before {
