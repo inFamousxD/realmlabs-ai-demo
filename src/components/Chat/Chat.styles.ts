@@ -652,3 +652,129 @@ export const Toggle = styled.div<{ $on?: boolean; $t: ThemeTokens }>`
         transition: all 0.2s ease;
     }
 `;
+
+// ── Attachment Dock ────────────────────────────────────────
+
+const attachIn = keyframes`
+    from { opacity: 0; transform: scale(0.72) translateY(5px); }
+    to   { opacity: 1; transform: scale(1)    translateY(0); }
+`;
+
+const attachOut = keyframes`
+    from { opacity: 1; transform: scale(1)    translateY(0); }
+    to   { opacity: 0; transform: scale(0.72) translateY(5px); }
+`;
+
+// Each row is ~34px tall (chip) + 6px gap. 4 rows ≈ 142px, 5 rows ≈ 176px.
+const DOCK_ROW_H = 34;
+const DOCK_GAP   = 6;
+const DOCK_MAX_ROWS = 4;
+const DOCK_MAX_H = DOCK_ROW_H * DOCK_MAX_ROWS + DOCK_GAP * (DOCK_MAX_ROWS - 1); // ~154px
+
+export const AttachmentDock = styled.div<{ $t: ThemeTokens }>`
+    display: flex;
+    gap: ${DOCK_GAP}px;
+    flex-wrap: wrap;
+    padding: 0 0 10px 0;
+    align-items: flex-start;
+    align-content: flex-start;
+    max-height: ${DOCK_MAX_H}px;
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    &::-webkit-scrollbar { width: 3px; }
+    &::-webkit-scrollbar-track { background: transparent; }
+    &::-webkit-scrollbar-thumb {
+        background: ${({ $t }) => $t.borderMid};
+        border-radius: 3px;
+    }
+`;
+
+export const AttachmentChip = styled.div<{ $removing?: boolean; $t: ThemeTokens }>`
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    /* Take up to 1/4 of the container but shrink to content if there's room */
+    flex: 0 1 calc(25% - ${DOCK_GAP * 3 / 4}px);
+    min-width: 0;
+    max-width: calc(25% - ${DOCK_GAP * 3 / 4}px);
+    background: ${({ $t }) => $t.pillBg};
+    border: 1px solid ${({ $t }) => $t.borderMid};
+    border-radius: 10px;
+    padding: 5px 6px 5px 6px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    animation: ${({ $removing }) => ($removing ? attachOut : attachIn)} 0.22s ease forwards;
+    position: relative;
+    overflow: hidden;
+    cursor: default;
+    box-sizing: border-box;
+
+    &::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: 10px;
+        background: ${({ $t }) => noiseBg($t.noiseOp)};
+        pointer-events: none;
+    }
+`;
+
+export const ChipIcon = styled.div<{ $color: string }>`
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    background: ${({ $color }) => $color};
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
+
+    .material-symbols-rounded {
+        font-size: 12px;
+        color: #fff;
+    }
+`;
+
+export const ChipName = styled.span<{ $t: ThemeTokens }>`
+    font-size: 11.5px;
+    font-weight: 500;
+    color: ${({ $t }) => $t.textSecondary};
+    white-space: nowrap;
+    position: relative;
+    z-index: 1;
+    letter-spacing: -0.1px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex: 1;
+    min-width: 0;
+`;
+
+export const ChipRemove = styled.button<{ $t: ThemeTokens }>`
+    width: 16px;
+    height: 16px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    color: ${({ $t }) => $t.textFaint};
+    transition: color 0.15s ease, background 0.15s ease;
+    flex-shrink: 0;
+    padding: 0;
+    position: relative;
+    z-index: 1;
+
+    .material-symbols-rounded { font-size: 13px; }
+
+    &:hover {
+        color: #ef4444;
+        background: rgba(239, 68, 68, 0.1);
+    }
+`;

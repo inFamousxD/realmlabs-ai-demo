@@ -1,6 +1,11 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import {
+    AttachmentChip,
+    AttachmentDock,
+    ChipIcon,
+    ChipName,
+    ChipRemove,
     CtrlPill,
     CtrlRow,
     DropdownDivider,
@@ -65,6 +70,14 @@ type Model = {
 
 type DropdownPos = { top: number; left: number; width: number };
 
+type Attachment = {
+    id: number;
+    name: string;
+    icon: string;
+    color: string;
+    removing?: boolean;
+};
+
 // ── Constants ──────────────────────────────────────────────
 
 const MODELS: Model[] = [
@@ -105,6 +118,21 @@ const SETTINGS = [
     { icon: "dark_mode", label: "Dark mode",        key: "dark"    },
 ];
 
+// ── Fake attachment pool ───────────────────────────────────
+
+const FAKE_FILES = [
+    { name: "report_q4.pdf",       icon: "picture_as_pdf",  color: "#ef4444" },
+    { name: "dataset.csv",         icon: "table_chart",     color: "#f59e0b" },
+    { name: "notes.md",            icon: "description",     color: "#6366f1" },
+    { name: "photo.png",           icon: "image",           color: "#10b981" },
+    { name: "audio_clip.mp3",      icon: "music_note",      color: "#ec4899" },
+    { name: "archive.zip",         icon: "folder_zip",      color: "#8b5cf6" },
+    { name: "presentation.pptx",   icon: "slideshow",       color: "#f97316" },
+    { name: "script.py",           icon: "code",            color: "#3b82f6" },
+    { name: "spreadsheet.xlsx",    icon: "grid_on",         color: "#059669" },
+    { name: "video.mp4",           icon: "movie",           color: "#dc2626" },
+];
+
 // ── Utility ────────────────────────────────────────────────
 
 function getBelowPos(ref: React.RefObject<HTMLElement | null>): DropdownPos | null {
@@ -142,6 +170,32 @@ const Chat: React.FC = () => {
     });
 
     const [ctrlPills, setCtrlPills] = useState(CTRL_DEFAULTS);
+
+    // ── Attachments ─────────────────────────────────────────
+    const [attachments, setAttachments] = useState<Attachment[]>([]);
+    const filePickerRef = useRef<HTMLInputElement>(null);
+    const nextFileIdx = useRef(0);
+
+    const addRandomAttachment = useCallback(() => {
+        const pool = FAKE_FILES;
+        const idx = nextFileIdx.current % pool.length;
+        nextFileIdx.current++;
+        const file = pool[idx];
+        setAttachments((prev) => [
+            ...prev,
+            { id: Date.now(), name: file.name, icon: file.icon, color: file.color },
+        ]);
+    }, []);
+
+    const removeAttachment = useCallback((id: number) => {
+        // animate out then remove
+        setAttachments((prev) =>
+            prev.map((a) => (a.id === id ? { ...a, removing: true } : a))
+        );
+        setTimeout(() => {
+            setAttachments((prev) => prev.filter((a) => a.id !== id));
+        }, 220);
+    }, []);
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -429,6 +483,29 @@ const Chat: React.FC = () => {
 
             {/* Input */}
             <InputArea $t={t}>
+                {/* Attachment dock — rendered above the input box */}
+                {attachments.length > 0 && (
+                    <AttachmentDock $t={t}>
+                        {attachments.map((a) => (
+                            <AttachmentChip key={a.id} $removing={a.removing} $t={t}>
+                                <ChipIcon $color={a.color}>
+                                    <span className="material-symbols-rounded">{a.icon}</span>
+                                </ChipIcon>
+                                <ChipName $t={t}>
+                                    {a.name}
+                                </ChipName>
+                                <ChipRemove
+                                    $t={t}
+                                    title="Remove"
+                                    onClick={() => removeAttachment(a.id)}
+                                >
+                                    <span className="material-symbols-rounded">close</span>
+                                </ChipRemove>
+                            </AttachmentChip>
+                        ))}
+                    </AttachmentDock>
+                )}
+
                 <InputBox $t={t}>
                     <input
                         ref={inputRef}
@@ -439,7 +516,19 @@ const Chat: React.FC = () => {
                         disabled={isStreaming}
                     />
                     <InputActions>
-                        <IconBtn $t={t} aria-label="Attach file" title="Attach file">
+                        {/* Hidden real file input (not functional in demo, but wired up) */}
+                        <input
+                            ref={filePickerRef}
+                            type="file"
+                            style={{ display: "none" }}
+                            onChange={addRandomAttachment}
+                        />
+                        <IconBtn
+                            $t={t}
+                            aria-label="Attach file"
+                            title="Attach file"
+                            onClick={addRandomAttachment}
+                        >
                             <span className="material-symbols-rounded">attach_file</span>
                         </IconBtn>
                         <SendBtn
