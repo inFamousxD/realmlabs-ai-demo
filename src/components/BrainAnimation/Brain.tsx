@@ -15,6 +15,7 @@ const Brain: React.FC<BrainProps> = ({ svgRef, ...props }) => (
             height: "100%",
             transform: "translate3d(0,0,0)",
             contentVisibility: "visible",
+            opacity: '0.35'
         }}
         viewBox="0 0 559 581"
         {...props}

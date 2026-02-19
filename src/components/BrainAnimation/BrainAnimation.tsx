@@ -20,17 +20,20 @@ const BrainAnimation: React.FC = () => {
 
     useEffect(() => {
         animate(svg.createDrawable('path'), {
-            draw: ['0 0', '0 1', '1 1'],
-            ease: 'inOutQuad',
-            duration: 1000,
-            delay: stagger(10, { from: 'random' }),
-            loop: true
+            draw: ['0 0', '0 1', '0 1', '0 1', '0 1', '1 1'],
+            ease: 'easeInOut',
+            duration: 5000,
+            delay: stagger(5, { from: 'center' }),
+            loop: true,
+            alternate: true
         });
     }, []);
 
     return (
         <MainViz>
-            <Brain svgRef={brainSvgRef} />
+            <div className="brain-animation">
+                <Brain svgRef={brainSvgRef} />
+            </div>
         </MainViz>
     );
 };

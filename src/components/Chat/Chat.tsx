@@ -166,7 +166,7 @@ const Chat: React.FC = () => {
                     </EmptyRing>
                     <EmptyTitle>Start a conversation</EmptyTitle>
                     <EmptySub>
-                        Ask anything — code, creative writing, analysis, or just chat.
+                        Ask anything - code, creative writing, analysis, or just chat.
                     </EmptySub>
                     <QuickActions>
                         {QUICK_PROMPTS.map((q, i) => (

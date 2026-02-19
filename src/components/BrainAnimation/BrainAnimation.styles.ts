@@ -28,6 +28,22 @@ export const MainViz = styled.main`
     position: relative;
     z-index: 1;
   }
+    display: flex;
+    vertical-align: center;
+    
+    
+    .brain-animation {
+        border: 1px dashed rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        
+        padding: 50px;
+        
+        width: 90vh;
+        height: 90vh;
+        
+        margin: auto;
+        vertical-align: center;
+    }
 `;
 
 export const VizCanvas = styled.canvas`
