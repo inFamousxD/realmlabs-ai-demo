@@ -20,6 +20,10 @@ export const GlobalStyle = createGlobalStyle`
 // ── Layout ─────────────────────────────────────────────────
 
 export const App = styled.div`
-  display: flex;
-  height: 100vh;
+    display: flex;
+    height: 100vh;
+
+    @media (max-width: 768px) {
+        flex-direction: column;
+    }
 `;

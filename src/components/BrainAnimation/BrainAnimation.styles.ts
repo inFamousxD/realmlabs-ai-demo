@@ -14,6 +14,10 @@ export const MainViz = styled.main`
     position: relative;
     overflow: hidden;
     font-family: "DM Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+
+    @media (max-width: 768px) {
+        display: none;
+    }
     
     &::before {
         content: "";

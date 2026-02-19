@@ -62,7 +62,7 @@ const slideUp = keyframes`
 // ── Sidebar ────────────────────────────────────────────────
 export const Sidebar = styled.aside`
     width: 500px;
-    min-width: 500px;
+    //min-width: 500px;
     background: #080a14;
     display: flex;
     flex-direction: column;
@@ -71,6 +71,12 @@ export const Sidebar = styled.aside`
     z-index: 10;
     font-family: "DM Sans", -apple-system, BlinkMacSystemFont, sans-serif;
 
+    @media (max-width: 768px) {
+        width: 100%;
+        min-width: 100%;
+        border-right: none;
+        height: 100%;
+    }
     /* subtle grain overlay */
 
     &::before {
