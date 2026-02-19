@@ -2,7 +2,15 @@ import Particles, { initParticlesEngine } from "@tsparticles/react";
 import { loadSlim } from "@tsparticles/slim";
 import { useEffect, useState } from "react";
 
-export default function ParticlesBg() {
+interface ParticlesBgProps {
+    particleColor?: string;
+    particleLinkColor?: string;
+}
+
+export default function ParticlesBg({
+                                        particleColor = "#ffffff30",
+                                        particleLinkColor = "#ffffff30",
+                                    }: ParticlesBgProps) {
     const [init, setInit] = useState(false);
 
     useEffect(() => {
@@ -21,10 +29,10 @@ export default function ParticlesBg() {
                 fullScreen: { enable: true, zIndex: -1 },
                 particles: {
                     number: { value: 250 },
-                    color: { value: "#ffffff30" },
+                    color: { value: particleColor },
                     links: {
                         enable: true,
-                        color: "#ffffff30",
+                        color: particleLinkColor,
                         distance: 20,
                     },
                     move: { enable: true, speed: 0.3 },

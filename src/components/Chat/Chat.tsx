@@ -41,7 +41,12 @@ import {
     StreamingCursor,
     Toggle,
     TypingIndicator,
-} from "./Chat.styles.ts";
+} from "./Chat.styles";
+import ThemeSlider from "../ThemeSlider";
+import { useTheme } from "../../ThemeContext";
+import { getTokens } from "../../themeTokens";
+
+// ── Types ──────────────────────────────────────────────────
 
 type Message = {
     id: number;
@@ -60,17 +65,19 @@ type Model = {
 
 type DropdownPos = { top: number; left: number; width: number };
 
+// ── Constants ──────────────────────────────────────────────
+
 const MODELS: Model[] = [
     { id: "llama-3.1", name: "Meta Llama 3.1", icon: "auto_awesome", context: "128k" },
     { id: "llama-3.2", name: "Meta Llama 3.2", icon: "auto_awesome", context: "128k" },
-    { id: "mistral-7b", name: "Mistral 7B", icon: "bolt", context: "32k" },
-    { id: "gemma-2", name: "Google Gemma 2", icon: "diamond", context: "8k" },
-    { id: "phi-3", name: "Microsoft Phi-3", icon: "hexagon", context: "4k" },
+    { id: "mistral-7b", name: "Mistral 7B",     icon: "bolt",         context: "32k"  },
+    { id: "gemma-2",   name: "Google Gemma 2",  icon: "diamond",      context: "8k"   },
+    { id: "phi-3",     name: "Microsoft Phi-3", icon: "hexagon",      context: "4k"   },
 ];
 
 const SIMULATED_RESPONSES: Record<string, string> = {
     "Write code":
-        "Sure! Here's a quick example of a React component that fetches data from an API and displays it in a list:\n\n```tsx\nconst DataList = () => {\n  const [items, setItems] = useState([]);\n  useEffect(() => {\n    fetch('/api/items')\n      .then(res => res.json())\n      .then(setItems);\n  }, []);\n  return <ul>{items.map(i => <li key={i.id}>{i.name}</li>)}</ul>;\n};\n```\n\nWould you like me to add error handling or loading states?",
+        "Sure! Here's a quick example of a React component that fetches data from an API:\n\n```tsx\nconst DataList = () => {\n  const [items, setItems] = useState([]);\n  useEffect(() => {\n    fetch('/api/items')\n      .then(res => res.json())\n      .then(setItems);\n  }, []);\n  return <ul>{items.map(i => <li key={i.id}>{i.name}</li>)}</ul>;\n};\n```\n\nWould you like me to add error handling or loading states?",
     Translate:
         "I'd be happy to help translate! Just provide the text and specify the target language. I support over 50 languages including Spanish, French, German, Japanese, Korean, Mandarin, Arabic, and many more.",
     Summarize:
@@ -81,35 +88,37 @@ const SIMULATED_RESPONSES: Record<string, string> = {
 
 const CTRL_DEFAULTS = [
     { icon: "thermostat", label: "Temp 0.7", active: false },
-    { icon: "chat_bubble", label: "Default", active: true },
-    { icon: "data_array", label: "Max 2048", active: false },
-    { icon: "visibility", label: "Special", active: false },
+    { icon: "chat_bubble", label: "Default",  active: true  },
+    { icon: "data_array",  label: "Max 2048", active: false },
+    { icon: "visibility",  label: "Special",  active: false },
 ];
 
 const QUICK_PROMPTS = [
-    { icon: "code", label: "Write code" },
-    { icon: "translate", label: "Translate" },
-    { icon: "summarize", label: "Summarize" },
+    { icon: "code",      label: "Write code" },
+    { icon: "translate", label: "Translate"  },
+    { icon: "summarize", label: "Summarize"  },
 ];
 
 const SETTINGS = [
-    { icon: "stream", label: "Stream response", key: "stream" },
-    { icon: "history", label: "Chat history", key: "history" },
-    { icon: "dark_mode", label: "Dark mode", key: "dark" },
+    { icon: "stream",    label: "Stream response", key: "stream"  },
+    { icon: "history",   label: "Chat history",    key: "history" },
+    { icon: "dark_mode", label: "Dark mode",        key: "dark"    },
 ];
 
-// ── Utility: get position below a ref element ──────────────
+// ── Utility ────────────────────────────────────────────────
+
 function getBelowPos(ref: React.RefObject<HTMLElement | null>): DropdownPos | null {
     if (!ref.current) return null;
     const rect = ref.current.getBoundingClientRect();
-    return {
-        top: rect.bottom + 6,
-        left: rect.left,
-        width: rect.width,
-    };
+    return { top: rect.bottom + 6, left: rect.left, width: rect.width };
 }
 
+// ── Component ──────────────────────────────────────────────
+
 const Chat: React.FC = () => {
+    const { theme } = useTheme();
+    const t = getTokens(theme);
+
     const [msg, setMsg] = useState("");
     const [messages, setMessages] = useState<Message[]>([]);
     const [isTyping, setIsTyping] = useState(false);
@@ -117,54 +126,41 @@ const Chat: React.FC = () => {
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
 
-    // Refs for positioning portalled dropdowns
-    const modelPillRef = useRef<HTMLDivElement>(null);
+    const modelPillRef   = useRef<HTMLDivElement>(null);
     const settingsBtnRef = useRef<HTMLButtonElement>(null);
 
-    // Dropdown states
-    const [modelDropdownOpen, setModelDropdownOpen] = useState(false);
+    const [modelDropdownOpen,    setModelDropdownOpen]    = useState(false);
     const [modelDropdownClosing, setModelDropdownClosing] = useState(false);
-    const [modelDropdownPos, setModelDropdownPos] = useState<DropdownPos | null>(null);
-    const [selectedModel, setSelectedModel] = useState<Model>(MODELS[0]);
+    const [modelDropdownPos,     setModelDropdownPos]     = useState<DropdownPos | null>(null);
+    const [selectedModel,        setSelectedModel]        = useState<Model>(MODELS[0]);
 
-    const [settingsOpen, setSettingsOpen] = useState(false);
+    const [settingsOpen,    setSettingsOpen]    = useState(false);
     const [settingsClosing, setSettingsClosing] = useState(false);
-    const [settingsPos, setSettingsPos] = useState<DropdownPos | null>(null);
+    const [settingsPos,     setSettingsPos]     = useState<DropdownPos | null>(null);
     const [settings, setSettings] = useState<Record<string, boolean>>({
-        stream: true,
-        history: true,
-        dark: true,
+        stream: true, history: true, dark: true,
     });
 
-    // Toggleable control pills
     const [ctrlPills, setCtrlPills] = useState(CTRL_DEFAULTS);
 
-    const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    };
-
     useEffect(() => {
-        scrollToBottom();
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages, isTyping, isStreaming]);
 
     // ── Animated close helpers ──────────────────────────────
+
     const closeModelDropdown = useCallback(() => {
         setModelDropdownClosing(true);
-        setTimeout(() => {
-            setModelDropdownOpen(false);
-            setModelDropdownClosing(false);
-        }, 160);
+        setTimeout(() => { setModelDropdownOpen(false); setModelDropdownClosing(false); }, 160);
     }, []);
 
     const closeSettings = useCallback(() => {
         setSettingsClosing(true);
-        setTimeout(() => {
-            setSettingsOpen(false);
-            setSettingsClosing(false);
-        }, 160);
+        setTimeout(() => { setSettingsOpen(false); setSettingsClosing(false); }, 160);
     }, []);
 
-    // ── Streaming text simulation ───────────────────────────
+    // ── Streaming simulation ────────────────────────────────
+
     const streamText = useCallback((fullText: string, msgId: number) => {
         setIsStreaming(true);
         let idx = 0;
@@ -179,20 +175,17 @@ const Chat: React.FC = () => {
                         : m
                 )
             );
-            if (idx >= words.length) {
-                clearInterval(interval);
-                setIsStreaming(false);
-            }
+            if (idx >= words.length) { clearInterval(interval); setIsStreaming(false); }
         }, 35 + Math.random() * 30);
     }, []);
 
-    // ── Send handler ────────────────────────────────────────
+    // ── Send ────────────────────────────────────────────────
+
     const handleSend = () => {
         const text = msg.trim();
         if (!text || isStreaming) return;
 
-        const userMsg: Message = { id: Date.now(), text, isUser: true };
-        setMessages((prev) => [...prev, userMsg]);
+        setMessages((prev) => [...prev, { id: Date.now(), text, isUser: true }]);
         setMsg("");
         setIsTyping(true);
 
@@ -206,52 +199,30 @@ const Chat: React.FC = () => {
         setTimeout(() => {
             setIsTyping(false);
             const botMsgId = Date.now() + 1;
-            const botMsg: Message = {
-                id: botMsgId,
-                text: responseText,
-                isUser: false,
-                streaming: true,
-                displayedText: "",
-            };
-            setMessages((prev) => [...prev, botMsg]);
+            setMessages((prev) => [
+                ...prev,
+                { id: botMsgId, text: responseText, isUser: false, streaming: true, displayedText: "" },
+            ]);
             streamText(responseText, botMsgId);
         }, 800 + Math.random() * 600);
     };
 
-    const handleQuickPrompt = (label: string) => {
-        setMsg(label + ": ");
-        inputRef.current?.focus();
-    };
-
-    const handleModelSelect = (model: Model) => {
-        setSelectedModel(model);
-        closeModelDropdown();
-    };
-
-    const toggleSetting = (key: string) => {
-        setSettings((prev) => ({ ...prev, [key]: !prev[key] }));
-    };
-
-    const toggleCtrlPill = (index: number) => {
-        setCtrlPills((prev) =>
-            prev.map((p, i) => (i === index ? { ...p, active: !p.active } : p))
-        );
-    };
-
     const hasMessages = messages.length > 0;
 
-    // ── Portal: Model dropdown ──────────────────────────────
-    const modelDropdownPortal = (modelDropdownOpen || modelDropdownClosing) &&
+    // ── Portalled dropdowns ─────────────────────────────────
+
+    const modelDropdownPortal =
+        (modelDropdownOpen || modelDropdownClosing) &&
         modelDropdownPos &&
         createPortal(
             <>
                 <DropdownOverlay onClick={closeModelDropdown} />
                 <DropdownMenu
                     $closing={modelDropdownClosing}
+                    $t={t}
                     style={{
                         position: "fixed",
                         top: modelDropdownPos.top,
-                        // Centre under the pill
                         left: modelDropdownPos.left + modelDropdownPos.width / 2,
                         transform: "translateX(-50%)",
                         minWidth: 240,
@@ -261,13 +232,14 @@ const Chat: React.FC = () => {
                         <React.Fragment key={m.id}>
                             <DropdownItem
                                 $selected={selectedModel.id === m.id}
-                                onClick={() => handleModelSelect(m)}
+                                $t={t}
+                                onClick={() => { setSelectedModel(m); closeModelDropdown(); }}
                             >
                                 <span className="material-symbols-rounded">{m.icon}</span>
                                 {m.name}
-                                <DropdownItemMeta>{m.context}</DropdownItemMeta>
+                                <DropdownItemMeta $t={t}>{m.context}</DropdownItemMeta>
                             </DropdownItem>
-                            {i === 1 && <DropdownDivider />}
+                            {i === 1 && <DropdownDivider $t={t} />}
                         </React.Fragment>
                     ))}
                 </DropdownMenu>
@@ -275,31 +247,34 @@ const Chat: React.FC = () => {
             document.body
         );
 
-    // ── Portal: Settings dropdown ───────────────────────────
-    const settingsDropdownPortal = (settingsOpen || settingsClosing) &&
+    const settingsDropdownPortal =
+        (settingsOpen || settingsClosing) &&
         settingsPos &&
         createPortal(
             <>
                 <DropdownOverlay onClick={closeSettings} />
                 <SettingsDropdown
                     $closing={settingsClosing}
+                    $t={t}
                     style={{
                         position: "fixed",
                         top: settingsPos.top,
-                        // Align right edge of dropdown to right edge of button,
-                        // but clamp so it never goes off the left edge of the screen
                         left: Math.max(8, settingsPos.left + settingsPos.width - 250),
                         right: "unset",
                         minWidth: 250,
                     }}
                 >
                     {SETTINGS.map((s) => (
-                        <SettingsToggleRow key={s.key} onClick={() => toggleSetting(s.key)}>
-                            <SettingsLabel>
+                        <SettingsToggleRow
+                            key={s.key}
+                            $t={t}
+                            onClick={() => setSettings((prev) => ({ ...prev, [s.key]: !prev[s.key] }))}
+                        >
+                            <SettingsLabel $t={t}>
                                 <span className="material-symbols-rounded">{s.icon}</span>
                                 {s.label}
                             </SettingsLabel>
-                            <Toggle $on={settings[s.key]} />
+                            <Toggle $on={settings[s.key]} $t={t} />
                         </SettingsToggleRow>
                     ))}
                 </SettingsDropdown>
@@ -307,39 +282,40 @@ const Chat: React.FC = () => {
             document.body
         );
 
+    // ── Render ──────────────────────────────────────────────
+
     return (
-        <Sidebar>
-            {/* ── Header ── */}
-            <SidebarHeader>
+        <Sidebar $t={t}>
+            {/* Header */}
+            <SidebarHeader $t={t}>
                 <Logo>
                     <LogoIcon>
                         <span className="material-symbols-rounded">neurology</span>
                     </LogoIcon>
-                    <LogoText>
+                    <LogoText $t={t}>
                         Realm<em>labs</em>
                     </LogoText>
                 </Logo>
                 <HeaderButtons>
-                    <HeaderBtn aria-label="New chat" title="New chat"
-                               onClick={() => {
-                                   setMessages([]);
-                                   setIsTyping(false);
-                                   setIsStreaming(false);
-                               }}
+                    {/* Theme toggle slider */}
+                    <ThemeSlider />
+
+                    <HeaderBtn $t={t} aria-label="New chat" title="New chat"
+                               onClick={() => { setMessages([]); setIsTyping(false); setIsStreaming(false); }}
                     >
                         <span className="material-symbols-rounded">edit_square</span>
                     </HeaderBtn>
-                    <HeaderBtn aria-label="Export" title="Export">
+                    <HeaderBtn $t={t} aria-label="Export" title="Export">
                         <span className="material-symbols-rounded">download</span>
                     </HeaderBtn>
                     <HeaderBtn
                         ref={settingsBtnRef}
+                        $t={t}
                         aria-label="Settings"
                         title="Settings"
                         onClick={() => {
-                            if (settingsOpen) {
-                                closeSettings();
-                            } else {
+                            if (settingsOpen) { closeSettings(); }
+                            else {
                                 const pos = getBelowPos(settingsBtnRef);
                                 if (pos) setSettingsPos(pos);
                                 setSettingsOpen(true);
@@ -352,14 +328,14 @@ const Chat: React.FC = () => {
                 </HeaderButtons>
             </SidebarHeader>
 
-            {/* ── Model selector ── */}
+            {/* Model selector */}
             <ModelRow>
                 <ModelPill
                     ref={modelPillRef}
+                    $t={t}
                     onClick={() => {
-                        if (modelDropdownOpen) {
-                            closeModelDropdown();
-                        } else {
+                        if (modelDropdownOpen) { closeModelDropdown(); }
+                        else {
                             const pos = getBelowPos(modelPillRef);
                             if (pos) setModelDropdownPos(pos);
                             setModelDropdownOpen(true);
@@ -369,42 +345,51 @@ const Chat: React.FC = () => {
                 >
                     <span className="material-symbols-rounded">{selectedModel.icon}</span>
                     {selectedModel.name}
-                    <ModelChevron $open={modelDropdownOpen}>
+                    <ModelChevron $open={modelDropdownOpen} $t={t}>
                         <span className="material-symbols-rounded">expand_more</span>
                     </ModelChevron>
                 </ModelPill>
             </ModelRow>
 
-            {/* ── Control pills ── */}
+            {/* Control pills */}
             <CtrlRow>
                 {ctrlPills.map((c, i) => (
-                    <CtrlPill key={i} $active={c.active} onClick={() => toggleCtrlPill(i)}>
+                    <CtrlPill
+                        key={i}
+                        $active={c.active}
+                        $t={t}
+                        onClick={() =>
+                            setCtrlPills((prev) =>
+                                prev.map((p, j) => (j === i ? { ...p, active: !p.active } : p))
+                            )
+                        }
+                    >
                         <span className="material-symbols-rounded">{c.icon}</span>
                         <span>{c.label}</span>
                     </CtrlPill>
                 ))}
             </CtrlRow>
 
-            {/* ── Messages or Empty ── */}
+            {/* Messages / Empty */}
             {hasMessages ? (
-                <MessagesArea>
+                <MessagesArea $t={t}>
                     {messages.map((m) => (
                         <MessageRow key={m.id} $isUser={m.isUser}>
-                            <MessageBubble $isUser={m.isUser}>
+                            <MessageBubble $isUser={m.isUser} $t={t}>
                                 {m.isUser ? m.text : (m.displayedText ?? m.text)}
-                                {!m.isUser && m.streaming && <StreamingCursor />}
+                                {!m.isUser && m.streaming && <StreamingCursor $t={t} />}
                             </MessageBubble>
                             {!m.streaming && (
                                 <MessageActions $isUser={m.isUser}>
-                                    <MsgActionBtn title="Copy">
+                                    <MsgActionBtn $t={t} title="Copy">
                                         <span className="material-symbols-rounded">content_copy</span>
                                     </MsgActionBtn>
                                     {!m.isUser && (
-                                        <MsgActionBtn title="Regenerate">
+                                        <MsgActionBtn $t={t} title="Regenerate">
                                             <span className="material-symbols-rounded">refresh</span>
                                         </MsgActionBtn>
                                     )}
-                                    <MsgActionBtn title="More">
+                                    <MsgActionBtn $t={t} title="More">
                                         <span className="material-symbols-rounded">more_horiz</span>
                                     </MsgActionBtn>
                                 </MessageActions>
@@ -412,7 +397,7 @@ const Chat: React.FC = () => {
                         </MessageRow>
                     ))}
                     {isTyping && (
-                        <TypingIndicator>
+                        <TypingIndicator $t={t}>
                             <span /><span /><span />
                         </TypingIndicator>
                     )}
@@ -420,16 +405,20 @@ const Chat: React.FC = () => {
                 </MessagesArea>
             ) : (
                 <EmptyState>
-                    <EmptyRing>
+                    <EmptyRing $t={t}>
                         <span className="material-symbols-rounded">forum</span>
                     </EmptyRing>
-                    <EmptyTitle>Start a conversation</EmptyTitle>
-                    <EmptySub>
+                    <EmptyTitle $t={t}>Start a conversation</EmptyTitle>
+                    <EmptySub $t={t}>
                         Ask anything — code, creative writing, analysis, or just chat.
                     </EmptySub>
                     <QuickActions>
                         {QUICK_PROMPTS.map((q, i) => (
-                            <QuickAction key={i} onClick={() => handleQuickPrompt(q.label)}>
+                            <QuickAction
+                                key={i}
+                                $t={t}
+                                onClick={() => { setMsg(q.label + ": "); inputRef.current?.focus(); }}
+                            >
                                 <span className="material-symbols-rounded">{q.icon}</span>
                                 {q.label}
                             </QuickAction>
@@ -438,9 +427,9 @@ const Chat: React.FC = () => {
                 </EmptyState>
             )}
 
-            {/* ── Input ── */}
-            <InputArea>
-                <InputBox>
+            {/* Input */}
+            <InputArea $t={t}>
+                <InputBox $t={t}>
                     <input
                         ref={inputRef}
                         value={msg}
@@ -450,25 +439,25 @@ const Chat: React.FC = () => {
                         disabled={isStreaming}
                     />
                     <InputActions>
-                        <IconBtn aria-label="Attach file" title="Attach file">
+                        <IconBtn $t={t} aria-label="Attach file" title="Attach file">
                             <span className="material-symbols-rounded">attach_file</span>
                         </IconBtn>
                         <SendBtn
+                            $t={t}
+                            $active={msg.trim().length > 0 && !isStreaming}
                             onClick={handleSend}
                             aria-label="Send"
-                            $active={msg.trim().length > 0 && !isStreaming}
                         >
                             <span className="material-symbols-rounded">arrow_upward</span>
                         </SendBtn>
                     </InputActions>
                 </InputBox>
-                <InputHint>
+                <InputHint $t={t}>
                     <span><kbd>Enter</kbd> to send</span>
                     <span>{selectedModel.name} · {selectedModel.context} context</span>
                 </InputHint>
             </InputArea>
 
-            {/* ── Portalled dropdowns ── */}
             {modelDropdownPortal}
             {settingsDropdownPortal}
         </Sidebar>
